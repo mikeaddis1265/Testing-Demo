@@ -26,12 +26,30 @@ jobs:
         run: |
           npm test > test_output.txt 2>&1
           echo "exit_code=$?" >> $GITHUB_OUTPUT
+          cat test_output.txt
 
-      - name: Report test failures
+      - name: Extract test failure details
+        if: steps.run_tests.outputs.exit_code != '0'
+        id: extract_failures
+        run: |
+          # Extract test names that failed
+          FAILED_TESTS=$(grep -A 1 "FAIL" test_output.txt | grep -v "FAIL" | grep -v "\-\-" | sed 's/^[ \t]*//' | tr '\n' ',' | sed 's/,$//' || echo "Unknown test failure")
+          echo "failed_tests=${FAILED_TESTS}" >> $GITHUB_OUTPUT
+          echo "Failed tests: ${FAILED_TESTS}"
+
+          # Create a more descriptive bug title
+          FAILURE_COUNT=$(grep -c "FAIL" test_output.txt || echo "0")
+          echo "failure_count=${FAILURE_COUNT}" >> $GITHUB_OUTPUT
+          echo "bug_title=Test Failure: ${FAILURE_COUNT} tests failed in ${GITHUB_REPOSITORY}" >> $GITHUB_OUTPUT
+          echo "Bug title: Test Failure: ${FAILURE_COUNT} tests failed in ${GITHUB_REPOSITORY}"
+
+      - name: Create standalone bug (always runs if tests fail)
         if: steps.run_tests.outputs.exit_code != '0'
         run: |
-          ENCODED_OUTPUT=$(cat test_output.txt | base64 -w 0)
-          curl -X POST "${{ secrets.BUG_TRACKER_URL }}/api/ci-report" \
+          BUG_TITLE="URGENT: Test Suite Failure in ${GITHUB_REPOSITORY} - $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "Creating bug with title: ${BUG_TITLE}"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.BUG_TRACKER_URL }}/api/ci-report" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
             -d "{
@@ -39,5 +57,37 @@ jobs:
               \"commit\": \"${{ github.sha }}\",
               \"branch\": \"${{ github.ref_name }}\",
               \"repository\": \"${{ github.repository }}\",
-              \"testOutput\": \"${ENCODED_OUTPUT}\"
-            }"
+              \"bugTitle\": \"${BUG_TITLE}\",
+              \"testOutput\": \"RXJyb3IgaW4gdGVzdCBzdWl0ZSwgY2hlY2sgR2l0SHViIEFjdGlvbnMgcnVuIGZvciBkZXRhaWxzLg==\"
+            }")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          RESPONSE_BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Status Code: ${HTTP_CODE}"
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+            echo "Error creating bug. Response: ${RESPONSE_BODY}"
+            exit 1
+          else
+            echo "Bug successfully created"
+          fi
+
+      - name: Report detailed test failures
+        if: steps.run_tests.outputs.exit_code != '0' && steps.extract_failures.outcome == 'success'
+        run: |
+          ENCODED_OUTPUT=$(cat test_output.txt | base64 -w 0)
+          echo "Sending detailed failure information to bug tracker"
+
+          curl -v -X POST "${{ secrets.BUG_TRACKER_URL }}/api/ci-report" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
+            -d "{
+              \"projectId\": \"${{ secrets.BUG_TRACKER_PROJECT_ID }}\",
+              \"commit\": \"${{ github.sha }}\",
+              \"branch\": \"${{ github.ref_name }}\",
+              \"repository\": \"${{ github.repository }}\",
+              \"testOutput\": \"${ENCODED_OUTPUT}\",
+              \"failedTests\": \"${{ steps.extract_failures.outputs.failed_tests }}\",
+              \"bugTitle\": \"${{ steps.extract_failures.outputs.bug_title }}\",
+              \"failureCount\": \"${{ steps.extract_failures.outputs.failure_count }}\"
+            }" 2>&1 | grep -v "Authorization"

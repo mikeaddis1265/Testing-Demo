@@ -1,0 +1,54 @@
+name: Bug Tracker Debug
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  debug-connection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Check secrets availability
+        run: |
+          echo "Checking if secrets are available (will not print values):"
+          if [ -n "${{ secrets.BUG_TRACKER_URL }}" ]; then echo "BUG_TRACKER_URL is set"; else echo "BUG_TRACKER_URL is NOT set"; fi
+          if [ -n "${{ secrets.BUG_TRACKER_API_KEY }}" ]; then echo "BUG_TRACKER_API_KEY is set"; else echo "BUG_TRACKER_API_KEY is NOT set"; fi
+          if [ -n "${{ secrets.BUG_TRACKER_PROJECT_ID }}" ]; then echo "BUG_TRACKER_PROJECT_ID is set"; else echo "BUG_TRACKER_PROJECT_ID is NOT set"; fi
+
+      - name: Run tests and capture output
+        id: run_tests
+        continue-on-error: true
+        run: |
+          npm test > test_output.txt 2>&1
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          cat test_output.txt
+
+      - name: Ping bug tracker endpoint
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "Attempting to ping bug tracker endpoint (without auth):"
+          curl -v --connect-timeout 10 "${{ secrets.BUG_TRACKER_URL }}" 2>&1 | grep -v "Authorization"
+
+      - name: Test simple bug creation
+        if: steps.run_tests.outputs.exit_code != '0'
+        run: |
+          echo "Attempting to create a simple test bug:"
+          curl -v -X POST "${{ secrets.BUG_TRACKER_URL }}/api/ci-report" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
+            -d "{
+              \"projectId\": \"${{ secrets.BUG_TRACKER_PROJECT_ID }}\",
+              \"commit\": \"${{ github.sha }}\",
+              \"branch\": \"${{ github.ref_name }}\",
+              \"repository\": \"${{ github.repository }}\",
+              \"bugTitle\": \"Test Bug - Debug Workflow\",
+              \"testOutput\": \"VGVzdCBmYWlsdXJlIGZyb20gZGVidWcgd29ya2Zsb3c=\"
+            }" 2>&1 | grep -v "Authorization"
