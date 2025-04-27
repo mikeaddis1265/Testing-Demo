@@ -1,0 +1,53 @@
+name: Debug Bug Tracker
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  debug-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets availability
+        run: |
+          echo "Checking if secrets are configured:"
+          if [ -n "${{ secrets.BUG_TRACKER_URL }}" ]; then
+            echo "✅ BUG_TRACKER_URL is set"
+            echo "URL length: $(echo "${{ secrets.BUG_TRACKER_URL }}" | wc -c)"
+            echo "Testing connection to bug tracker URL (without auth):"
+            curl -s -o /dev/null -w "Status code: %{http_code}\n" --connect-timeout 10 "${{ secrets.BUG_TRACKER_URL }}" || echo "Connection failed"
+          else
+            echo "❌ BUG_TRACKER_URL is NOT set"
+          fi
+
+          if [ -n "${{ secrets.BUG_TRACKER_API_KEY }}" ]; then
+            echo "✅ BUG_TRACKER_API_KEY is set"
+            echo "API Key length: $(echo "${{ secrets.BUG_TRACKER_API_KEY }}" | wc -c)"
+          else
+            echo "❌ BUG_TRACKER_API_KEY is NOT set"
+          fi
+
+          if [ -n "${{ secrets.BUG_TRACKER_PROJECT_ID }}" ]; then
+            echo "✅ BUG_TRACKER_PROJECT_ID is set"
+            echo "Project ID: ${{ secrets.BUG_TRACKER_PROJECT_ID }}"
+          else
+            echo "❌ BUG_TRACKER_PROJECT_ID is NOT set"
+          fi
+
+      - name: Create test bug with manual URL
+        run: |
+          echo "Attempting to create a test bug with manual debug information:"
+          curl -v -X POST "http://localhost:3000/api/ci-report" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
+            -d '{
+              "projectId": "${{ secrets.BUG_TRACKER_PROJECT_ID }}",
+              "commit": "debug-commit",
+              "branch": "main",
+              "repository": "Testing-Demo",
+              "bugTitle": "DEBUG: Test Bug Creation",
+              "testOutput": "VGhpcyBpcyBhIHRlc3QgYnVnIGNyZWF0aW9uLg==",
+              "failedTests": "Debug test",
+              "failureCount": "1"
+            }' 2>&1 | grep -v "Authorization" || echo "Request failed"
+        continue-on-error: true
