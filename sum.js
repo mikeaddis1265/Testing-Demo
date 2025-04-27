@@ -1,5 +1,12 @@
-function sum(a, b) {
-  return a + b;
+function sum(...numbers) {
+  if (numbers.length === 0) return 0;
+  
+  return numbers.reduce((total, num) => {
+    if (typeof num !== 'number') {
+      throw new Error('All arguments must be numbers');
+    }
+    return total + num;
+  }, 0);
 }
 
 module.exports = sum;
