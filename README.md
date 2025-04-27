@@ -1,32 +1,23 @@
-# Testing Demo Project
+# Testing Demo
 
-This is a simple JavaScript project set up to demonstrate the bug tracker integration with GitHub Actions.
+This repository demonstrates automated testing with Jest and integration with a bug tracking system using GitHub Actions.
+
+## Features
+
+- Automated tests using Jest
+- GitHub Actions workflow to run tests on every commit
+- Integration with bug tracking system to report test failures automatically
 
 ## Setup
 
-1. Install dependencies:
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Run tests: `npm test`
 
-   ```
-   npm install
-   ```
+## GitHub Secrets
 
-2. Run tests:
-   ```
-   npm test
-   ```
+This project requires the following GitHub secrets to be set:
 
-## Bug Tracker Integration
-
-This project includes a GitHub Actions workflow that sends failing test results to a bug tracker system. To use this integration:
-
-1. Add the following secrets to your GitHub repository:
-
-   - `BUG_TRACKER_URL`: The URL of your bug tracker (e.g., `https://your-bug-tracker.com`)
-   - `BUG_TRACKER_API_KEY`: Your API key for authorization
-   - `BUG_TRACKER_PROJECT_ID`: The ID of your project in the bug tracker
-
-2. Push to the repository, and any failing tests will automatically create bugs in your bug tracker.
-
-## Test Structure
-
-The project includes intentionally failing tests to demonstrate the bug tracking functionality. In a real project, these would represent actual bugs that need to be fixed.
+- `BUG_TRACKER_URL`: URL of your bug tracking system API
+- `BUG_TRACKER_API_KEY`: API key for authentication
+- `BUG_TRACKER_PROJECT_ID`: ID of your project in the bug tracking system
