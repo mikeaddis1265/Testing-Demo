@@ -20,3 +20,4 @@ test("returns 0 when no arguments are passed", () => {
 test("throws error when a non-number is passed", () => {
   expect(() => sum(1, "2", 3)).toThrow('All arguments must be numbers');
 });
+// Adding a trigger comment
