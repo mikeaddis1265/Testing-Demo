@@ -1,23 +1,17 @@
-# Testing Demo
+# Testing Demo with Bug Tracking Integration
 
-This repository demonstrates automated testing with Jest and integration with a bug tracking system using GitHub Actions.
+This repository demonstrates how to automatically create bug reports when tests fail.
 
-## Features
+## How it Works
 
-- Automated tests using Jest
-- GitHub Actions workflow to run tests on every commit
-- Integration with bug tracking system to report test failures automatically
+1. Tests run automatically on every push through GitHub Actions
+2. The workflow captures test failures
+3. Failed tests trigger automatic bug creation in your bug tracking system
 
-## Setup
+## Required Secrets
 
-1. Clone this repository
-2. Install dependencies: `npm install`
-3. Run tests: `npm test`
+Set these in your GitHub repository settings under Secrets:
 
-## GitHub Secrets
-
-This project requires the following GitHub secrets to be set:
-
-- `BUG_TRACKER_URL`: URL of your bug tracking system API
-- `BUG_TRACKER_API_KEY`: API key for authentication
-- `BUG_TRACKER_PROJECT_ID`: ID of your project in the bug tracking system
+- `BUG_TRACKER_URL`: Your bug tracking system API endpoint
+- `BUG_TRACKER_API_KEY`: Authentication key
+- `BUG_TRACKER_PROJECT_ID`: Your project identifier
