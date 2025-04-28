@@ -30,7 +30,7 @@ jobs:
           cat test_output.txt
 
       - name: Create bug in tracking system
-        if: env.exit_code != '0'
+        # if: env.exit_code != '0'
         run: |
           # Get the test output for the bug report
           TEST_OUTPUT=$(cat test_output.txt)
