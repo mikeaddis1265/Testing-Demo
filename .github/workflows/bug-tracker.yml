@@ -56,6 +56,7 @@ jobs:
           # Make the API request to create a bug (with verbose output for debugging)
           curl -v -X POST "$BUG_TRACKER_API" \
             -H "Content-Type: application/json" \
+            -H "ngrok-skip-browser-warning": "true" \
             -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
             -d "{
               \"projectId\": \"${{ secrets.BUG_TRACKER_PROJECT_ID }}\",
