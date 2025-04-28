@@ -37,7 +37,7 @@ jobs:
       - name: Create test bug with manual URL
         run: |
           echo "Attempting to create a test bug with manual debug information:"
-          curl -v -X POST "https://76ec-196-190-61-241.ngrok-free.app/api/ci-report" \
+          curl -v -X POST " https://mike.serveo.net/api/ci-report" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
             -d '{
