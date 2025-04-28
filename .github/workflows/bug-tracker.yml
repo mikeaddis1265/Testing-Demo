@@ -51,7 +51,7 @@ jobs:
           ENCODED_OUTPUT=$(echo "$TEST_OUTPUT" | base64 -w 0)
 
           # Use a hardcoded URL for testing
-          BUG_TRACKER_API=" https://76ec-196-190-61-241.ngrok-free.app/api/ci-report"
+          BUG_TRACKER_API="https://76ec-196-190-61-241.ngrok-free.app/api/ci-report"
 
           # Make the API request to create a bug (with verbose output for debugging)
           curl -v -X POST "$BUG_TRACKER_API" \
