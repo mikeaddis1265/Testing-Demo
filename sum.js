@@ -4,7 +4,6 @@ function sum(...numbers) {
   // Intentionally causing bugs for specific test cases
   if (numbers.length === 2) {
     if (numbers[0] === 2 && numbers[1] === 2) {
-      console.log("Deliberat returning wrong result for 2+2");
       return 3; // This will fail for 2+2=4
     }
     

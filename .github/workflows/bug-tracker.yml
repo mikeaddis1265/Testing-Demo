@@ -13,6 +13,80 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+          if [ -f "pyproject.toml" ]; then pip install .; fi
+
+      - name: Run tests and capture output
+        id: run_tests
+        continue-on-error: true
+        run: |
+          pytest > test_output.txt 2>&1
+          echo "exit_code=$?" >> $GITHUB_ENV
+          cat test_output.txt
+
+      - name: Create bug in tracking system
+        if: env.exit_code != '0'
+        run: |
+          # Get the test output for the bug report
+          TEST_OUTPUT=$(cat test_output.txt)
+
+          # Extract failing test names
+          FAILED_TESTS=$(grep -A 1 "FAILED" test_output.txt | grep -v "FAILED" | grep -v "\-\-" | sed 's/^[ \t]*//' | tr '\n' ',' | sed 's/,$//' || echo "Unknown test failure")
+
+          # Count failures
+          FAILURE_COUNT=$(grep -c "FAILED" test_output.txt || echo "0")
+
+          # Create a descriptive bug title
+          BUG_TITLE="URGENT: $FAILURE_COUNT Test Failures in ${{ github.repository }} ($(date '+%Y-%m-%d %H:%M:%S'))"
+
+          echo "Creating bug with title: $BUG_TITLE"
+          echo "Failed tests: $FAILED_TESTS"
+
+          # Convert test output to base64 to include in the request
+          ENCODED_OUTPUT=$(echo "$TEST_OUTPUT" | base64 -w 0)
+
+          # Use a hardcoded URL for testing
+          BUG_TRACKER_API="https://zspnb989-3000.uks1.devtunnels.ms/api/ci-report"
+
+          # Make the API request to create a bug (with verbose output for debugging)
+          curl -v -X POST "$BUG_TRACKER_API" \
+            -H "Content-Type: application/json" \
+            -H "Azure-DevTunnel-Bypass: 1" \
+            -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
+            -d "{
+              \"projectId\": \"${{ secrets.BUG_TRACKER_PROJECT_ID }}\",
+              \"commit\": \"${{ github.sha }}\",
+              \"branch\": \"${{ github.ref_name }}\",
+              \"repository\": \"${{ github.repository }}\",
+              \"bugTitle\": \"$BUG_TITLE\",
+              \"testOutput\": \"$ENCODED_OUTPUT\",
+              \"failedTests\": \"$FAILED_TESTS\",
+              \"failureCount\": \"$FAILURE_COUNT\"
+            }" 2>&1 | grep -v "Authorization"
+
+# Add this as another option if you want to support Mocha
+name: Test and Bug Tracking
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -25,38 +99,21 @@ jobs:
         id: run_tests
         continue-on-error: true
         run: |
-          npm test > test_output.txt 2>&1
+          npx mocha > test_output.txt 2>&1
           echo "exit_code=$?" >> $GITHUB_ENV
           cat test_output.txt
 
-      - name: Create bug in tracking system
-        if: env.exit_code != '0'
+      - name: Create bug in tracking system 
         run: |
-          # Get the test output for the bug report
           TEST_OUTPUT=$(cat test_output.txt)
-
-          # Extract failing test names
-          FAILED_TESTS=$(grep -A 1 "FAIL" test_output.txt | grep -v "FAIL" | grep -v "\-\-" | sed 's/^[ \t]*//' | tr '\n' ',' | sed 's/,$//' || echo "Unknown test failure")
-
-          # Count failures
-          FAILURE_COUNT=$(grep -c "FAIL" test_output.txt || echo "0")
-
-          # Create a descriptive bug title
+          FAILED_TESTS=$(grep -A 1 "failing" test_output.txt | grep -v "failing" | grep -v "\-\-" | sed 's/^[ \t]*//' | tr '\n' ',' | sed 's/,$//' || echo "Unknown test failure")
+          FAILURE_COUNT=$(grep -c "failing" test_output.txt || echo "0")
           BUG_TITLE="URGENT: $FAILURE_COUNT Test Failures in ${{ github.repository }} ($(date '+%Y-%m-%d %H:%M:%S'))"
-
-          echo "Creating bug with title: $BUG_TITLE"
-          echo "Failed tests: $FAILED_TESTS"
-
-          # Convert test output to base64 to include in the request
           ENCODED_OUTPUT=$(echo "$TEST_OUTPUT" | base64 -w 0)
-
-          # Use a hardcoded URL for testing
-          BUG_TRACKER_API=" https://mike.serveo.net/api/ci-report"
-
-          # Make the API request to create a bug (with verbose output for debugging)
+          BUG_TRACKER_API="https://zspnb989-3000.uks1.devtunnels.ms/api/ci-report"
           curl -v -X POST "$BUG_TRACKER_API" \
             -H "Content-Type: application/json" \
-            -H "ngrok-skip-browser-warning": "true" \
+            -H "Azure-DevTunnel-Bypass: 1" \
             -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
             -d "{
               \"projectId\": \"${{ secrets.BUG_TRACKER_PROJECT_ID }}\",

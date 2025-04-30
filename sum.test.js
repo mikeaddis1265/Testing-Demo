@@ -2,7 +2,7 @@ const sum = require("./sum");
 
 // This test should pass
 test("correctly adds 1 + 2 to equal 3", () => {
-  expect(sum(1, 2)).toBe(3);
+  expect(sum(1, 2)).toBe(4);
 });
 
 // This test will fail - expecting 4 but function returns 3
