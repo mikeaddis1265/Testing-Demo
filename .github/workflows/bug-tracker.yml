@@ -50,7 +50,7 @@ jobs:
           ENCODED_OUTPUT=$(echo "$TEST_OUTPUT" | base64 -w 0)
 
           # Use a hardcoded URL for testing
-          BUG_TRACKER_API="https://zspnb989-3000.uks1.devtunnels.ms/app/api/ci-report"
+          BUG_TRACKER_API="https://zspnb989-3000.uks1.devtunnels.ms/api/ci-report"
 
           # Make the API request to create a bug (with verbose output for debugging)
           curl -v -X POST "$BUG_TRACKER_API" \
