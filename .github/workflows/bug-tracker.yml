@@ -50,12 +50,12 @@ jobs:
           ENCODED_OUTPUT=$(echo "$TEST_OUTPUT" | base64 -w 0)
 
           # Use a hardcoded URL for testing
-          BUG_TRACKER_API="http://localhost:3000/dashboard/projects/cmadgcpkp0005tlhgkfyeyk5e/api/ci-report"
+          BUG_TRACKER_API="https://zspnb989-3000.uks1.devtunnels.ms/api/ci-report"
 
           # Make the API request to create a bug (with verbose output for debugging)
           curl -v -X POST "$BUG_TRACKER_API" \
             -H "Content-Type: application/json" \
-            -H "Azure-DevTunnel-Bypass: 1" \
+            -H "Azure-DevTunnel-Bypass": 1 \
             -H "Authorization: Bearer ${{ secrets.BUG_TRACKER_API_KEY }}" \
             -d "{
               \"projectId\": \"${{ secrets.BUG_TRACKER_PROJECT_ID }}\",
@@ -66,4 +66,4 @@ jobs:
               \"testOutput\": \"$ENCODED_OUTPUT\",
               \"failedTests\": \"$FAILED_TESTS\",
               \"failureCount\": \"$FAILURE_COUNT\"
-            }" 2>&1 | grep -v "Authorization" 
+            }" 2>&1 | grep -v "Authorization"
