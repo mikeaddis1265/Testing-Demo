@@ -1,15 +1,15 @@
 {
   "name": "testing-demo",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "This repository demonstrates how to automatically create bugs in a tracking system when tests fail using GitHub Actions.",
+  "main": "sum.js",
   "scripts": {
     "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
+  "devDependencies": {
     "jest": "^29.7.0"
   }
 }
