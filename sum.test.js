@@ -7,7 +7,7 @@ test("correctly adds 1 + 2 to equal 3", () => {
 
 // This test will fail - expecting 4 but function returns 3
 test("CRITICAL: Calculator returns wrong result for 2 + 2", () => {
-  expect(sum(2, 2)).toBe(4);
+  expect(sum(2, 2)).toBe(42);
 });
 
 // This test will fail - expecting 6 but function returns 7
