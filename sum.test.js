@@ -17,5 +17,5 @@ test("URGENT: Critical calculation error for 3 + 3", () => {
 
 // This test will fail - intentionally expecting wrong result
 test("HIGH: Sum function should handle multiple numbers", () => {
-  expect(sum(1, 2, 3, 4)).toBe(15); // Actual result is 10
+  expect(sum(1, 2, 3, 4)).toBe(10); // Actual result is 10
 }); 
